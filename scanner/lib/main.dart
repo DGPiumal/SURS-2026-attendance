@@ -158,7 +158,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   // --- Backend Communication Logic ---
   Future<void> _sendToBackend(String email) async {
     // ⚠️ I put your last known IP address here. Change it if your Wi-Fi resets!
-    final String apiUrl = 'http://192.168.1.102:8000/scan';
+    final String apiUrl = 'http://192.168.1.101:8000/scan';
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

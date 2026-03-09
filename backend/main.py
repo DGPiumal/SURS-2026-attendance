@@ -1,57 +1,51 @@
-import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
+import os
 from dotenv import load_dotenv
+from datetime import datetime  # ⬅️ We only need datetime now
 
-# 1. Load the environment variables from the .env file
 load_dotenv()
 
-# 2. Initialize the FastAPI app
-app = FastAPI(
-    title="SURS 2026 Attendance API",
-    description="Backend for tracking student check-ins via QR codes.",
-    version="1.0.0"
-)
+app = FastAPI()
 
-# 3. Connect to Supabase securely
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("Missing Supabase credentials. Check your .env file!")
-
-# Create the Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# 4. Define the Data Model using Pydantic
-class ScanRequest(BaseModel):
+class ScanData(BaseModel):
     surs_mail: str
-    device_id: str = "unknown_scanner"
+    device_id: str
 
-# 5. Define our API Endpoints
 @app.get("/")
 def health_check():
-    """Simple health check to verify the API is running."""
     return {"status": "online", "message": "SURS 2026 API is ready."}
 
 @app.post("/scan")
-def record_scan(scan_data: ScanRequest):
-    """
-    Receives a scanned SURS email and logs it into the Supabase database.
-    """
+def scan_qr(scan_data: ScanData):
+    # 1. Get midnight WITH your exact local timezone attached
+    today_midnight = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
     try:
-        # Attempt to insert the record into the 'attendance' table
+        # 2. Check the database
+        existing_scans = supabase.table("attendance").select("*") \
+            .eq("surs_mail", scan_data.surs_mail) \
+            .gte("scanned_at", today_midnight) \
+            .execute()
+
+        # 3. Block duplicates
+        if len(existing_scans.data) > 0:
+            return {"status": "duplicate", "message": "Student already checked in today!"}
+
+        # 4. Save new scans
         response = supabase.table("attendance").insert({
             "surs_mail": scan_data.surs_mail,
             "device_id": scan_data.device_id
         }).execute()
-        
-        return {
-            "status": "success", 
-            "message": f"Successfully checked in {scan_data.surs_mail}",
-            "data": response.data
-        }
-    
+
+        return {"status": "success", "message": "Attendance recorded successfully!"}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        import traceback
+        traceback.print_exc() 
+        raise HTTPException(status_code=500, detail=str(e))

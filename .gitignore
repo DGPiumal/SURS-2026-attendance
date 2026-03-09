@@ -1,25 +1,21 @@
-# Environments
+# 🛑 SECURITY: Never upload environment variables!
 .env
-.venv
-env/
+*.env
+
+# 🐍 Python Virtual Environments & Cache
 venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Python
+env/
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 
-# Flutter/Dart (if you use Flutter for the scanner)
-.dart_tool/
+# 📱 Flutter & Dart Build Files
 build/
+.dart_tool/
+.packages
 .pub-cache/
 .pub/
-*.jks
-*.key
+scanner/build/
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# 📷 Generated QR Codes (Don't upload test images)
+*.png
+*.jpg

@@ -155,7 +155,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Future<void> _sendToBackend(String email) async {
 // Update this URL to the backend server address reachable from the device.
   // For local testing, use the machine's local network IP (not localhost).
-    final String apiUrl = 'http://10.30.36.122:8000/scan';
+    final String apiUrl = 'https://surs-2026.vercel.app/scan';
 
     // Immediate Light Vibration so the volunteer knows the camera saw the QR code
     await Haptics.vibrate(HapticsType.light);
